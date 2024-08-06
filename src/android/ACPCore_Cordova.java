@@ -12,11 +12,7 @@
 
 package com.adobe.marketing.mobile.cordova;
 
-import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.Event;
-import com.adobe.marketing.mobile.Event.Builder;
-import com.adobe.marketing.mobile.ExtensionError;
-import com.adobe.marketing.mobile.ExtensionErrorCallback;
 import com.adobe.marketing.mobile.LoggingMode;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.MobilePrivacyStatus;
@@ -31,10 +27,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 public class ACPCore_Cordova extends CordovaPlugin {
-	final static String METHOD_CORE_DISPATCH_EVENT = "dispatchEvent";
-    final static String METHOD_CORE_DISPATCH_EVENT_WITH_RESPONSE_CALLBACK = "dispatchEventWithResponseCallback";
-    final static String METHOD_CORE_DISPATCH_RESPONSE_EVENT = "dispatchResponseEvent";
-    final static String METHOD_CORE_DOWNLOAD_RULES = "downloadRules";
+
     final static String METHOD_CORE_EXTENSION_VERSION_CORE = "extensionVersion";
     final static String METHOD_CORE_GET_PRIVACY_STATUS = "getPrivacyStatus";
     final static String METHOD_CORE_GET_SDK_IDENTITIES = "getSdkIdentities";
@@ -50,19 +43,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
     // ===============================================================
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-        if (METHOD_CORE_DISPATCH_EVENT.equals(action)) {
-            this.dispatchEvent(args, callbackContext);
-            return true;
-        } else if (METHOD_CORE_DISPATCH_EVENT_WITH_RESPONSE_CALLBACK.equals(action)) {
-             this.dispatchEventWithResponseCallback(args, callbackContext);
-             return true;
-        } else if (METHOD_CORE_DISPATCH_RESPONSE_EVENT.equals(action)) {
-             this.dispatchResponseEvent(args, callbackContext);
-             return true;
-        } else if (METHOD_CORE_DOWNLOAD_RULES.equals(action)) {
-             this.downloadRules(callbackContext);
-             return true;
-        } else if (METHOD_CORE_EXTENSION_VERSION_CORE.equals(action)) {
+        if (METHOD_CORE_EXTENSION_VERSION_CORE.equals(action)) {
              this.extensionVersion(callbackContext);
              return true;
         } else if (METHOD_CORE_GET_PRIVACY_STATUS.equals(action)) {
@@ -94,103 +75,6 @@ public class ACPCore_Cordova extends CordovaPlugin {
         return false;
     }
 
-    // ===============================================================
-    // MobileCore Methods
-    // ===============================================================
-    private void dispatchEvent(final JSONArray args, final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final HashMap<String, Object> eventMap = getObjectMapFromJSON(args.getJSONObject(0));
-                    final Event event = getEventFromMap(eventMap);
-
-                    MobileCore.dispatchEvent(event, new ExtensionErrorCallback<ExtensionError>() {
-                        @Override
-                        public void error(ExtensionError extensionError) {
-                            callbackContext.error(extensionError.getErrorName());
-                        }
-                    });
-
-                    callbackContext.success();
-                } catch (Exception ex) {
-                    final String errorMessage = String.format("Exception in call to dispatchEvent: %s", ex.getLocalizedMessage());
-                    MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
-                    callbackContext.error(errorMessage);
-                }
-            }
-        });
-    }
-
-    private void dispatchEventWithResponseCallback(final JSONArray args, final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final HashMap<String, Object> eventMap = getObjectMapFromJSON(args.getJSONObject(0));
-                    final Event event = getEventFromMap(eventMap);
-
-                    MobileCore.dispatchEventWithResponseCallback(event, new AdobeCallback<Event>() {
-                        @Override
-                        public void call(Event event) {
-                            final HashMap<String, Object> eventMap = getMapFromEvent(event);
-                            final JSONObject eventJson = new JSONObject(eventMap);
-                            callbackContext.success(eventJson);
-                        }
-                    }, new ExtensionErrorCallback<ExtensionError>() {
-                        @Override
-                        public void error(ExtensionError extensionError) {
-                            callbackContext.error(extensionError.getErrorName());
-                        }
-                    });
-
-                    callbackContext.success();
-                } catch (Exception ex) {
-                    final String errorMessage = String.format("Exception in call to dispatchEventWithResponseCallback: %s", ex.getLocalizedMessage());
-                    MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
-                    callbackContext.error(errorMessage);
-                }
-            }
-        });
-    }
-
-    private void dispatchResponseEvent(final JSONArray args, final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final HashMap<String, Object> responseEventMap = getObjectMapFromJSON(args.getJSONObject(0));
-                    final Event responseEvent = getEventFromMap(responseEventMap);
-                    final HashMap<String, Object> requestEventMap = getObjectMapFromJSON(args.getJSONObject(1));
-                    final Event requestEvent = getEventFromMap(requestEventMap);
-
-                    MobileCore.dispatchResponseEvent(responseEvent, requestEvent, new ExtensionErrorCallback<ExtensionError>() {
-                        @Override
-                        public void error(ExtensionError extensionError) {
-                            callbackContext.error(extensionError.getErrorName());
-                        }
-                    });
-
-                    callbackContext.success();
-                } catch (Exception ex) {
-                    final String errorMessage = String.format("Exception in call to dispatchResponseEvent: %s", ex.getLocalizedMessage());
-                    MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
-                    callbackContext.error(errorMessage);
-                }
-            }
-        });
-    }
-
-    private void downloadRules(final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                // TODO: this method is not implemented in Android
-                callbackContext.success();
-            }
-        });
-    }
-
     private void extensionVersion(final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(new Runnable() {
             @Override
@@ -202,46 +86,23 @@ public class ACPCore_Cordova extends CordovaPlugin {
     }
 
     private void getPrivacyStatus(final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                MobileCore.getPrivacyStatus(new AdobeCallback<MobilePrivacyStatus>() {
-                    @Override
-                    public void call(MobilePrivacyStatus mobilePrivacyStatus) {
-                        callbackContext.success(mobilePrivacyStatus.getValue());
-                    }
-                });
-            }
-        });
+        cordova.getThreadPool().execute(() -> MobileCore.getPrivacyStatus(mobilePrivacyStatus -> callbackContext.success(mobilePrivacyStatus.getValue())));
     }
 
     private void getSdkIdentities(final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                MobileCore.getSdkIdentities(new AdobeCallback<String>() {
-                    @Override
-                    public void call(String s) {
-                        callbackContext.success(s);
-                    }
-                });
-            }
-        });
+        cordova.getThreadPool().execute(() -> MobileCore.getSdkIdentities(callbackContext::success));
     }
 
     private void setAdvertisingIdentifier(final JSONArray args, final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final String newAdId = args.getString(0);
-                    MobileCore.setAdvertisingIdentifier(newAdId);
-                    callbackContext.success();
-                } catch (final Exception ex) {
-                    final String errorMessage = String.format("Exception in call to setAdvertisingIdentifier: %s", ex.getLocalizedMessage());
-                    MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
-                    callbackContext.error(errorMessage);
-                }
+        cordova.getThreadPool().execute(() -> {
+            try {
+                final String newAdId = args.getString(0);
+                MobileCore.setAdvertisingIdentifier(newAdId);
+                callbackContext.success();
+            } catch (final Exception ex) {
+                final String errorMessage = String.format("Exception in call to setAdvertisingIdentifier: %s", ex.getLocalizedMessage());
+                MobileCore.setLogLevel(LoggingMode.WARNING);
+                callbackContext.error(errorMessage);
             }
         });
     }
@@ -271,7 +132,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
                     callbackContext.success();
                 } catch (final Exception ex) {
                     final String errorMessage = String.format("Exception in call to setLogLevel: %s", ex.getLocalizedMessage());
-                    MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
+                    MobileCore.setLogLevel(LoggingMode.WARNING);
                     callbackContext.error(errorMessage);
                 }
             }
@@ -300,7 +161,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
                     callbackContext.success();
                 } catch (final Exception ex) {
                     final String errorMessage = String.format("Exception in call to setPrivacyStatus: %s", ex.getLocalizedMessage());
-                    MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
+                    MobileCore.setLogLevel(LoggingMode.WARNING);
                     callbackContext.error(errorMessage);
                 }
             }
@@ -308,57 +169,48 @@ public class ACPCore_Cordova extends CordovaPlugin {
     }
 
     private void trackAction(final JSONArray args, final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final String action = args.getString(0);
-                    final HashMap<String, String> contextData = getStringMapFromJSON(args.getJSONObject(1));
+        cordova.getThreadPool().execute(() -> {
+            try {
+                final String action = args.getString(0);
+                final HashMap<String, String> contextData = getStringMapFromJSON(args.getJSONObject(1));
 
-                    MobileCore.trackAction(action, contextData);
-                    callbackContext.success();
-                } catch (final Exception ex) {
-                    final String errorMessage = String.format("Exception in call to trackAction: %s", ex.getLocalizedMessage());
-                    MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
-                    callbackContext.error(errorMessage);
-                }
+                MobileCore.trackAction(action, contextData);
+                callbackContext.success();
+            } catch (final Exception ex) {
+                final String errorMessage = String.format("Exception in call to trackAction: %s", ex.getLocalizedMessage());
+                MobileCore.setLogLevel(LoggingMode.WARNING);
+                callbackContext.error(errorMessage);
             }
         });
     }
 
     private void trackState(final JSONArray args, final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final String state = args.getString(0);
-                    final HashMap<String, String> contextData = getStringMapFromJSON(args.getJSONObject(1));
+        cordova.getThreadPool().execute(() -> {
+            try {
+                final String state = args.getString(0);
+                final HashMap<String, String> contextData = getStringMapFromJSON(args.getJSONObject(1));
 
-                    MobileCore.trackState(state, contextData);
-                    callbackContext.success();
-                } catch (final Exception ex) {
-                    final String errorMessage = String.format("Exception in call to trackState: %s", ex.getLocalizedMessage());
-                    MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
-                    callbackContext.error(errorMessage);
-                }
+                MobileCore.trackState(state, contextData);
+                callbackContext.success();
+            } catch (final Exception ex) {
+                final String errorMessage = String.format("Exception in call to trackState: %s", ex.getLocalizedMessage());
+                MobileCore.setLogLevel(LoggingMode.WARNING);
+                callbackContext.error(errorMessage);
             }
         });
     }
 
     private void updateConfiguration(final JSONArray args, final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final HashMap<String, Object> newConfig = getObjectMapFromJSON(args.getJSONObject(0));
+        cordova.getThreadPool().execute(() -> {
+            try {
+                final HashMap<String, Object> newConfig = getObjectMapFromJSON(args.getJSONObject(0));
 
-                    MobileCore.updateConfiguration(newConfig);
-                    callbackContext.success();
-                } catch (final Exception ex) {
-                    final String errorMessage = String.format("Exception in call to updateConfiguration: %s", ex.getLocalizedMessage());
-                    MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
-                    callbackContext.error(errorMessage);
-                }
+                MobileCore.updateConfiguration(newConfig);
+                callbackContext.success();
+            } catch (final Exception ex) {
+                final String errorMessage = String.format("Exception in call to updateConfiguration: %s", ex.getLocalizedMessage());
+                MobileCore.setLogLevel(LoggingMode.WARNING);
+                callbackContext.error(errorMessage);
             }
         });
     }
