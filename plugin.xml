@@ -114,6 +114,7 @@
             </config>
             <pods use-frameworks="true">
                 <pod name="ACPCore" spec=">= 2.6.1" />
+                <pod name="AEPCore" spec=">= 2.6.1" />
             </pods>
         </podspec>
     </platform>
