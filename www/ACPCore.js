@@ -242,10 +242,10 @@ var ACPCore = (function() {
             return;
         }
 
-        if (contextData && !acpIsObject(contextData)) {
+       /** if (contextData && !acpIsObject(contextData)) {
             acpPrintNotAnObject("contextData", FUNCTION_NAME);
             return;
-        }
+        }**/
 
         if (success && !acpIsFunction(success)) {
             acpPrintNotAFunction("success", FUNCTION_NAME);
