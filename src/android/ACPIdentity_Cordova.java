@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile.cordova;
 
 import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.AdobeCallbackWithError;
+import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Identity;
 import com.adobe.marketing.mobile.VisitorID;
 import org.apache.cordova.CallbackContext;
