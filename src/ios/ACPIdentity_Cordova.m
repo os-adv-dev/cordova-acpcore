@@ -14,6 +14,8 @@
 #import <ACPCore/ACPIdentity.h>
 #import <Cordova/CDV.h>
 
+@import AEPEdgeIdentity;
+
 @interface ACPIdentity_Cordova : CDVPlugin
 - (void) extensionVersion:(CDVInvokedUrlCommand*)command;
 - (void) appendVisitorInfoForUrl:(CDVInvokedUrlCommand*)command;
@@ -52,9 +54,14 @@ static const NSInteger INVALID_AUTH_STATE = 3;
 
 - (void) getExperienceCloudId:(CDVInvokedUrlCommand*)command {
     [self.commandDelegate runInBackground:^{
-        [ACPIdentity getExperienceCloudId:^(NSString * _Nullable experienceCloudId) {
-            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:experienceCloudId];
-            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        [AEPMobileEdgeIdentity getExperienceCloudId:^(NSString *ecid, NSError *error){
+            if(error != nil) {
+                CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString: error.localizedDescription];
+                [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+            } else {
+                CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString: ecid];
+                [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+            }
         }];
     }];
 }
