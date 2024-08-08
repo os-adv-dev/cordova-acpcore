@@ -13,6 +13,7 @@
 package com.adobe.marketing.mobile.cordova;
 
 import com.adobe.marketing.mobile.AdobeCallback;
+import com.adobe.marketing.mobile.AdobeCallbackWithError;
 import com.adobe.marketing.mobile.Identity;
 import com.adobe.marketing.mobile.VisitorID;
 import org.apache.cordova.CallbackContext;
@@ -95,17 +96,16 @@ public class ACPIdentity_Cordova extends CordovaPlugin {
     }
 
     private void getExperienceCloudId(final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
+        cordova.getThreadPool().execute(() -> Identity.getExperienceCloudId(new AdobeCallbackWithError<String>() {
             @Override
-            public void run() {
-                Identity.getExperienceCloudId(new AdobeCallback<String>() {
-                    @Override
-                    public void call(String experienceCloudId) {
-                        callbackContext.success(experienceCloudId);
-                    }
-                });
+            public void fail(AdobeError adobeError) {
+                callbackContext.error("Error to getExperienceCloudId "+adobeError.getErrorName());
             }
-        });
+            @Override
+            public void call(String experienceCloudId) {
+                callbackContext.success(experienceCloudId);
+            }
+        }));
     }
 
     private void getIdentifiers(final CallbackContext callbackContext) {
