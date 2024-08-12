@@ -172,8 +172,13 @@ public class ACPCore_Cordova extends CordovaPlugin {
         cordova.getThreadPool().execute(() -> {
             try {
                 final String action = args.getString(0);
-                final HashMap<String, String> contextData = getStringMapFromJSON(args.getJSONObject(1));
 
+                if(action.isEmpty()) {
+                    callbackContext.error("Action is required");
+                    return;
+                }
+
+                final HashMap<String, String> contextData = getStringMapFromJSON(args.getString(1));
                 MobileCore.trackAction(action, contextData);
                 callbackContext.success();
             } catch (final Exception ex) {
@@ -231,6 +236,37 @@ public class ACPCore_Cordova extends CordovaPlugin {
             }
         }
 
+        return map;
+    }
+
+    private HashMap<String, String> getStringMapFromJSON(JSONArray jsonArray) throws Exception {
+        HashMap<String, String> map = new HashMap<>();
+
+        if (jsonArray.length() > 0) {
+            JSONObject jsonObject = jsonArray.getJSONObject(0);
+            Iterator<String> keys = jsonObject.keys();
+
+            while (keys.hasNext()) {
+                String key = keys.next();
+                String value = jsonObject.getString(key);
+                map.put(key, value);
+            }
+        }
+        return map;
+    }
+
+    private HashMap<String, String> getStringMapFromJSON(String jsonString) throws Exception {
+        HashMap<String, String> map = new HashMap<>();
+
+        JSONArray jsonArray = new JSONArray(jsonString);
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject jsonObject = jsonArray.getJSONObject(i);
+
+            String key = jsonObject.getString("Key");
+            String value = jsonObject.getString("Value");
+
+            map.put(key, value);
+        }
         return map;
     }
 
