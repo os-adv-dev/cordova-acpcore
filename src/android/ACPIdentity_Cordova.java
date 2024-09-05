@@ -97,11 +97,7 @@ public class ACPIdentity_Cordova extends CordovaPlugin {
     }
 
     private void getExperienceCloudId(final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(() -> Identity.getExperienceCloudId(new AdobeCallbackWithError<String>() {
-            @Override
-            public void fail(AdobeError adobeError) {
-                callbackContext.error("Error to getExperienceCloudId "+adobeError.getErrorName());
-            }
+        cordova.getThreadPool().execute(() -> com.adobe.marketing.mobile.edge.identity.Identity.getExperienceCloudId(new AdobeCallback<String>() {
             @Override
             public void call(String experienceCloudId) {
                 callbackContext.success(experienceCloudId);
