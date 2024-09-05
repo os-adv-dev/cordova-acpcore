@@ -170,7 +170,7 @@
     }];
 }
 
-- (void) trackAction:(CDVInvokedUrlCommand*)command {
+/**- (void) trackAction:(CDVInvokedUrlCommand*)command {
     [self.commandDelegate runInBackground:^{
         id firstArg = [self getCommandArg:command.arguments[0]];
         id secondArg = [self getCommandArg:command.arguments[1]];
@@ -186,6 +186,52 @@
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }];
+}**/
+
+- (void) trackAction:(CDVInvokedUrlCommand*)command {
+    [self.commandDelegate runInBackground:^{
+        @try {
+            id firstArg = [self getCommandArg:command.arguments[0]];
+            id secondArg = [self getCommandArg:command.arguments[1]];
+
+            if (![firstArg isKindOfClass:[NSString class]] || [firstArg length] == 0) {
+                CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Action is required"];
+                [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+                return;
+            }
+
+            NSDictionary *contextData = [self getStringMapFromJSON:secondArg];
+
+            [ACPCore trackAction:firstArg data:contextData];
+
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        }
+        @catch (NSException *exception) {
+            NSString *errorMessage = [NSString stringWithFormat:@"Exception in call to trackAction: %@", [exception reason]];
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:errorMessage];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        }
+    }];
+}
+
+- (NSDictionary *)getStringMapFromJSON:(id)jsonString {
+    NSMutableDictionary *map = [[NSMutableDictionary alloc] init];
+    NSData *data = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
+    NSError *error;
+    NSArray *jsonArray = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
+
+    if (!error && [jsonArray isKindOfClass:[NSArray class]]) {
+        for (NSDictionary *jsonObject in jsonArray) {
+            NSString *key = jsonObject[@"Key"];
+            NSString *value = jsonObject[@"Value"];
+            if (key && value) {
+                [map setObject:value forKey:key];
+            }
+        }
+    }
+    
+    return [map copy];
 }
 
 - (void) trackState:(CDVInvokedUrlCommand*)command {
